@@ -1,4 +1,6 @@
+# netlify.toml — static site for now
 [build]
-  command = "npm run build" # We'll change this later when we add React; OK for now
-  publish = "dist"          # We'll change this later too
+  publish = "."
   functions = "netlify/functions"
+
+# (We’ll switch this to a React build later.)
