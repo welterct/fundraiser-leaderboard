@@ -3,7 +3,8 @@
 // and return clean JSON for your chart.
 
 export async function handler() {
-  const CSV_URL = process.env.CSV_URL; // we'll add this in Netlify settings later
+  const CSV_URL = process.env.CSV_URL || "https://docs.google.com/spreadsheets/d/e/2PACX-1vTJ8vj3cbNY2vW6qO66J1ibc8YKWzEugksPGzr4ojSVRtnMCcxMFSO67GpUBtRjAMuV62IZoMetfuCH/pub?gid=908586700&single=true&output=csv";
+
   if (!CSV_URL) {
     return json(500, { error: "Missing CSV_URL env var (set it in Netlify → Site settings → Environment variables)" });
   }
