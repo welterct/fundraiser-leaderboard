@@ -4,15 +4,158 @@
     <meta charset="utf-8" />
     <title>Fundraiser Leaderboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style>body{font-family:system-ui,Arial,sans-serif;padding:2rem;}</style>
+    <style>
+      :root { --bg:#f6f7f8; --card:#fff; --border:#e5e7eb; --text:#111; --muted:#6b7280; }
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:var(--bg); }
+      .wrap { max-width: 1100px; margin: 0 auto; padding: 24px; }
+      .card { background:var(--card); border:1px solid var(--border); border-radius:16px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+      .row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+      .btn { padding:8px 12px; border:1px solid var(--border); border-radius:12px; background:#fff; cursor:pointer; font-size:14px; }
+      .btn[aria-pressed="true"] { background:#111; color:#fff; border-color:#111; }
+      .muted { color: var(--muted); font-size:12px; }
+      code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+    </style>
+
+    <!-- React + ReactDOM (UMD) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+
+    <!-- Recharts (UMD) -->
+    <script src="https://unpkg.com/recharts/umd/Recharts.min.js"></script>
+
+    <!-- Babel (so we can write JSX here, no build step) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   </head>
   <body>
-    <h1>Fundraiser Leaderboard</h1>
-    <p>This is a placeholder page. We’ll plug in your React chart next.</p>
+    <div class="wrap">
+      <div id="root"></div>
+    </div>
 
-    <p>
-      Try your function (it will work after we connect Netlify & set the CSV link):<br/>
-      <code>/.netlify/functions/leaderboard</code>
-    </p>
+    <script type="text/babel">
+      const { useEffect, useMemo, useState } = React;
+      const {
+        ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LabelList, Cell
+      } = Recharts;
+
+      const METRICS = [
+        { key: "totalGifts", label: "Total Gifts", fmt: v => "$" + Number(v).toLocaleString() },
+        { key: "percentGivers", label: "% of Givers", fmt: v => Number(v).toFixed(1) + "%" },
+        { key: "percentRecurring", label: "% Recurring (people)", fmt: v => Number(v).toFixed(1) + "%" },
+        { key: "percentRecurringByGifts", label: "% Recurring (gifts)", fmt: v => Number(v).toFixed(1) + "%" },
+      ];
+
+      const COLORS = ["#f97316","#38bdf8","#34d399","#a78bfa","#fde047","#60a5fa","#22d3ee",
+                      "#f59e0b","#84cc16","#14b8a6","#ec4899","#6366f1","#eab308","#10b981","#3b82f6"];
+
+      function App(){
+        const [metric, setMetric] = useState("totalGifts");
+        const [rows, setRows] = useState([]);
+        const [loading, setLoading] = useState(true);
+        const [error, setError] = useState(null);
+        const [sortByValue, setSortByValue] = useState(false);
+        const [lastUpdated, setLastUpdated] = useState(null);
+
+        useEffect(() => {
+          async function go(){
+            try{
+              setLoading(true);
+              setError(null);
+              const r = await fetch("/.netlify/functions/leaderboard", { cache: "no-store" });
+              const json = await r.json();
+              if(!r.ok) throw new Error(json?.error || "Failed to load");
+              setRows(Array.isArray(json.rows) ? json.rows : []);
+              setLastUpdated(new Date());
+            }catch(e){
+              setError(String(e.message || e));
+            }finally{
+              setLoading(false);
+            }
+          }
+          go();
+        }, []);
+
+        const data = useMemo(() => {
+          const arr = rows.map(r => ({ ...r, value: Number(r[metric]) || 0 }));
+          if (sortByValue) {
+            return [...arr].sort((a,b) => b.value - a.value);
+          } else {
+            return [...arr].sort((a,b) => a.year - b.year);
+          }
+        }, [rows, metric, sortByValue]);
+
+        const yMax = useMemo(() => {
+          const max = data.reduce((m, d) => Math.max(m, d.value || 0), 0);
+          if (metric === "totalGifts") {
+            const step = 1000;
+            return Math.max(step, Math.ceil(max/step)*step);
+          } else {
+            return Math.max(100, Math.ceil(max));
+          }
+        }, [data, metric]);
+
+        const fmtTick = v => (metric === "totalGifts" ? "$" + Number(v).toLocaleString() : v + "%");
+        const topText = useMemo(() => {
+          const tops = [...rows].sort((a,b)=> (b.totalGifts||0)-(a.totalGifts||0)).slice(0,3)
+            .filter(d => (d.totalGifts||0) > 0);
+          return tops.length ? tops.map(d => `${d.year}: $${(d.totalGifts||0).toLocaleString()}`).join(" · ") : "No totals yet";
+        }, [rows]);
+
+        return (
+          <div className="stack">
+            <header className="card" style={{padding:"16px 16px 8px"}}>
+              <h1 style={{margin:"0 0 6px"}}>FL — Live Leaderboard</h1>
+              <div className="muted">Loads from Google Sheets (via Netlify Function)</div>
+              <div className="muted" style={{marginTop:6}}>
+                {loading ? "Loading…" : (error ? <span style={{color:"#b91c1c"}}>Error: {error}</span> : <>Last updated: {lastUpdated && lastUpdated.toLocaleTimeString()}</>)}
+              </div>
+              <div style={{height:8}}/>
+              <div className="row">
+                {METRICS.map(m => (
+                  <button key={m.key} className="btn"
+                    aria-pressed={metric===m.key}
+                    onClick={()=>setMetric(m.key)}>{m.label}</button>
+                ))}
+                <label className="muted" style={{display:"inline-flex", gap:8, alignItems:"center", marginLeft:8}}>
+                  <input type="checkbox" checked={sortByValue} onChange={e=>setSortByValue(e.target.checked)} />
+                  Sort by value (desc)
+                </label>
+              </div>
+              <div className="muted" style={{marginTop:8}}>Top totals: {topText}</div>
+            </header>
+
+            <section className="card" style={{height:"460px", marginTop:16, padding:12}}>
+              <div style={{width:"100%", height:"100%"}}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
+                    <CartesianGrid vertical={false} stroke="#eee" />
+                    <XAxis dataKey="year" tick={{ fontSize: 12 }} interval={0} angle={-45} textAnchor="end" height={60} />
+                    <YAxis domain={[0, yMax]} tick={{ fontSize: 12 }} tickFormatter={fmtTick} />
+                    <Tooltip
+                      formatter={(value) => {
+                        const m = METRICS.find(x => x.key === metric);
+                        return [m ? m.fmt(value) : value, m ? m.label : metric];
+                      }}
+                      labelFormatter={(l) => `Class of ${l}`}
+                      separator=": "
+                    />
+                    <Bar dataKey="value" radius={[8,8,0,0]} isAnimationActive={true}>
+                      {data.map((d, i) => <Cell key={d.year} fill={COLORS[i % COLORS.length]} />)}
+                      <LabelList dataKey="year" position="top" style={{ fontSize: 10, fill: "#111" }} />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </section>
+
+            <footer style={{marginTop:12}} className="muted">
+              Data endpoint: <code>/.netlify/functions/leaderboard</code>
+            </footer>
+          </div>
+        );
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById("root"));
+      root.render(<App />);
+    </script>
   </body>
 </html>
