@@ -47,7 +47,9 @@
       })();
 
       const { useEffect, useMemo, useState } = React;
-      const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LabelList, Cell } = Recharts;
+     const R = window.Recharts;
+if (!R) { throw new Error("Recharts UMD failed to load."); }
+const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LabelList, Cell } = R;
 
       const METRICS = [
         { key: "totalGifts", label: "Total Gifts", fmt: v => "$" + Number(v).toLocaleString() },
