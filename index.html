@@ -15,16 +15,12 @@
       .muted { color: var(--muted); font-size:12px; }
       .errbox { display:none; background:#fee2e2; border:1px solid #fecaca; color:var(--err); padding:8px 12px; border-radius:10px; margin: 12px 0; font-size:13px; }
       code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+      svg { width: 100%; height: 100%; }
     </style>
 
-    <!-- React + ReactDOM (UMD) -->
+    <!-- React + ReactDOM (UMD) + Babel for JSX (no build step needed) -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-
-    <!-- Recharts (UMD) -->
-    <script src="https://cdn.jsdelivr.net/npm/recharts@2.12.7/umd/Recharts.min.js"></script>
-
-    <!-- Babel Standalone (lets us write JSX in the browser) -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   </head>
   <body>
@@ -33,7 +29,7 @@
       <div id="root"></div>
     </div>
 
-    <!-- Tell Babel which presets to use -->
+    <!-- App (pure SVG chart) -->
     <script type="text/babel" data-presets="env,react">
       // Show any runtime errors on the page (not just in the console)
       (function attachErrorBox(){
@@ -47,9 +43,6 @@
       })();
 
       const { useEffect, useMemo, useState } = React;
-     const R = window.Recharts;
-if (!R) { throw new Error("Recharts UMD failed to load."); }
-const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LabelList, Cell } = R;
 
       const METRICS = [
         { key: "totalGifts", label: "Total Gifts", fmt: v => "$" + Number(v).toLocaleString() },
@@ -60,6 +53,20 @@ const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip
 
       const COLORS = ["#f97316","#38bdf8","#34d399","#a78bfa","#fde047","#60a5fa","#22d3ee",
                       "#f59e0b","#84cc16","#14b8a6","#ec4899","#6366f1","#eab308","#10b981","#3b82f6"];
+
+      // Nice tick generator for Y axis (0..max with ~5 ticks)
+      function niceTicks(max, count = 5) {
+        if (max <= 0 || !isFinite(max)) return [0, 1];
+        const rough = max / count;
+        const pow10 = Math.pow(10, Math.floor(Math.log10(rough)));
+        let nice = pow10;
+        if (rough / pow10 >= 5) nice = 5 * pow10;
+        else if (rough / pow10 >= 2) nice = 2 * pow10;
+        const top = Math.ceil(max / nice) * nice;
+        const out = [];
+        for (let v = 0; v <= top + 1e-9; v += nice) out.push(v);
+        return out;
+      }
 
       function App(){
         const [metric, setMetric] = useState("totalGifts");
@@ -102,69 +109,5 @@ const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip
           return Math.max(100, Math.ceil(max));
         }, [data, metric]);
 
-        const fmtTick = v => (metric === "totalGifts" ? "$" + Number(v).toLocaleString() : v + "%");
-        const topText = useMemo(() => {
-          const tops = [...rows].sort((a,b)=> (b.totalGifts||0)-(a.totalGifts||0)).slice(0,3)
-            .filter(d => (d.totalGifts||0) > 0);
-          return tops.length ? tops.map(d => `${d.year}: $${(d.totalGifts||0).toLocaleString()}`).join(" · ") : "No totals yet";
-        }, [rows]);
-
-        return (
-          <div>
-            <header className="card" style={{padding:"16px 16px 8px"}}>
-              <h1 style={{margin:"0 0 6px"}}>FL — Live Leaderboard</h1>
-              <div className="muted">Loads from Google Sheets (via Netlify Function)</div>
-              <div className="muted" style={{marginTop:6}}>
-                {loading ? "Loading…" : (error ? <span style={{color:"#b91c1c"}}>Error: {error}</span> : <>Last updated: {lastUpdated && lastUpdated.toLocaleTimeString()}</>)}
-              </div>
-              <div style={{height:8}}/>
-              <div className="row">
-                {METRICS.map(m => (
-                  <button key={m.key} className="btn"
-                          aria-pressed={metric===m.key}
-                          onClick={()=>setMetric(m.key)}>{m.label}</button>
-                ))}
-                <label className="muted" style={{display:"inline-flex", gap:8, alignItems:"center", marginLeft:8}}>
-                  <input type="checkbox" checked={sortByValue} onChange={e=>setSortByValue(e.target.checked)} />
-                  Sort by value (desc)
-                </label>
-              </div>
-              <div className="muted" style={{marginTop:8}}>Top totals: {topText}</div>
-            </header>
-
-            <section className="card" style={{height:"460px", marginTop:16, padding:12}}>
-              <div style={{width:"100%", height:"100%"}}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
-                    <CartesianGrid vertical={false} stroke="#eee" />
-                    <XAxis dataKey="year" tick={{ fontSize: 12 }} interval={0} angle={-45} textAnchor="end" height={60} />
-                    <YAxis domain={[0, yMax]} tick={{ fontSize: 12 }} tickFormatter={fmtTick} />
-                    <Tooltip
-                      formatter={(value) => {
-                        const m = METRICS.find(x => x.key === metric);
-                        return [m ? m.fmt(value) : value, m ? m.label : metric];
-                      }}
-                      labelFormatter={(l) => `Class of ${l}`}
-                      separator=": "
-                    />
-                    <Bar dataKey="value" radius={[8,8,0,0]} isAnimationActive={true}>
-                      {data.map((d, i) => <Cell key={d.year} fill={COLORS[i % COLORS.length]} />)}
-                      <LabelList dataKey="year" position="top" style={{ fontSize: 10, fill: "#111" }} />
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </section>
-
-            <footer style={{marginTop:12}} className="muted">
-              Data endpoint: <code>/.netlify/functions/leaderboard</code>
-            </footer>
-          </div>
-        );
-      }
-
-      const root = ReactDOM.createRoot(document.getElementById("root"));
-      root.render(<App />);
-    </script>
-  </body>
-</html>
+        const ticks = useMemo(() => {
+          if (metric === "t
