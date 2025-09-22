@@ -106,8 +106,124 @@
             const step = 1000;
             return Math.max(step, Math.ceil(max/step)*step);
           }
-          return Math.max(100, Math.ceil(max));
+          return 100; // percentage metrics
         }, [data, metric]);
 
         const ticks = useMemo(() => {
-          if (metric === "t
+          if (metric === "totalGifts") return niceTicks(yMax, 5);
+          return [0, 20, 40, 60, 80, 100];
+        }, [yMax, metric]);
+
+        const fmtTick = v => (metric === "totalGifts" ? "$" + Number(v).toLocaleString() : v + "%");
+        const metricObj = METRICS.find(m => m.key === metric);
+
+        const topText = useMemo(() => {
+          const tops = [...rows].sort((a,b)=> (b.totalGifts||0)-(a.totalGifts||0)).slice(0,3)
+            .filter(d => (d.totalGifts||0) > 0);
+          return tops.length ? tops.map(d => `${d.year}: $${(d.totalGifts||0).toLocaleString()}`).join(" · ") : "No totals yet";
+        }, [rows]);
+
+        // Chart layout
+        const W = 980, H = 420;
+        const M = { top: 20, right: 20, bottom: 70, left: 70 };
+        const innerW = W - M.left - M.right;
+        const innerH = H - M.top - M.bottom;
+
+        // Scales
+        const n = data.length || 1;
+        const band = innerW / n;
+        const barPad = Math.min(12, band * 0.2);
+        const barW = Math.max(2, band - barPad);
+        const xPos = (i) => M.left + i * band + (band - barW) / 2;
+        const yPos = (v) => {
+          const maxV = (metric === "totalGifts") ? yMax : 100;
+          const t = Math.min(1, Math.max(0, v / (maxV || 1)));
+          return M.top + (1 - t) * innerH;
+        };
+
+        return (
+          <div>
+            <header className="card" style={{padding:"16px 16px 8px"}}>
+              <h1 style={{margin:"0 0 6px"}}>FL — Live Leaderboard</h1>
+              <div className="muted">Loads from Google Sheets (via Netlify Function)</div>
+              <div className="muted" style={{marginTop:6}}>
+                {loading ? "Loading…" : (error ? <span style={{color:"#b91c1c"}}>Error: {error}</span> : <>Last updated: {lastUpdated && lastUpdated.toLocaleTimeString()}</>)}
+              </div>
+              <div style={{height:8}}/>
+              <div className="row">
+                {METRICS.map(m => (
+                  <button key={m.key} className="btn"
+                          aria-pressed={metric===m.key}
+                          onClick={()=>setMetric(m.key)}>{m.label}</button>
+                ))}
+                <label className="muted" style={{display:"inline-flex", gap:8, alignItems:"center", marginLeft:8}}>
+                  <input type="checkbox" checked={sortByValue} onChange={e=>setSortByValue(e.target.checked)} />
+                  Sort by value (desc)
+                </label>
+              </div>
+              <div className="muted" style={{marginTop:8}}>Top totals: {topText}</div>
+            </header>
+
+            <section className="card" style={{height:"460px", marginTop:16, padding:12}}>
+              <div style={{width:"100%", height:"100%"}}>
+                <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Leaderboard bar chart">
+                  {/* Y grid lines + ticks */}
+                  {ticks.map((t, i) => {
+                    const y = yPos(t);
+                    return (
+                      <g key={`tick-${i}`}>
+                        <line x1={M.left} y1={y} x2={W - M.right} y2={y} stroke="#eee" />
+                        <text x={M.left - 10} y={y + 4} textAnchor="end" fontSize="12" fill="#111">
+                          {fmtTick(t)}
+                        </text>
+                      </g>
+                    );
+                  })}
+
+                  {/* X axis baseline */}
+                  <line x1={M.left} y1={H - M.bottom} x2={W - M.right} y2={H - M.bottom} stroke="#ddd" />
+
+                  {/* Bars + labels */}
+                  {data.map((d, i) => {
+                    const x = xPos(i);
+                    const y = yPos(d.value);
+                    const h = (H - M.bottom) - y;
+                    const color = COLORS[i % COLORS.length];
+                    const cx = x + barW / 2;
+
+                    return (
+                      <g key={d.year}>
+                        <rect
+                          x={x} y={y} width={barW} height={Math.max(0, h)} fill={color}
+                        >
+                          <title>{`Class of ${d.year}\n${metricObj.label}: ${metricObj.fmt(d.value)}`}</title>
+                        </rect>
+                        <text
+                          x={cx}
+                          y={H - M.bottom + 14}
+                          fontSize="10"
+                          fill="#111"
+                          textAnchor="end"
+                          transform={`rotate(-45 ${cx} ${H - M.bottom + 14})`}
+                        >
+                          {d.year}
+                        </text>
+                      </g>
+                    );
+                  })}
+                </svg>
+              </div>
+            </section>
+
+            <footer style={{marginTop:12}} className="muted">
+              Data endpoint: <code>/.netlify/functions/leaderboard</code>
+            </footer>
+          </div>
+        );
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById("root"));
+      root.render(<App />);
+    </script>
+  </body>
+</html>
