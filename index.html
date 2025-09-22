@@ -5,14 +5,15 @@
     <title>Fundraiser Leaderboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
-      :root { --bg:#f6f7f8; --card:#fff; --border:#e5e7eb; --text:#111; --muted:#6b7280; }
-      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:var(--bg); }
+      :root { --bg:#f6f7f8; --card:#fff; --border:#e5e7eb; --text:#111; --muted:#6b7280; --err:#b91c1c; }
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:var(--bg); color:var(--text); }
       .wrap { max-width: 1100px; margin: 0 auto; padding: 24px; }
       .card { background:var(--card); border:1px solid var(--border); border-radius:16px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
       .row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
       .btn { padding:8px 12px; border:1px solid var(--border); border-radius:12px; background:#fff; cursor:pointer; font-size:14px; }
       .btn[aria-pressed="true"] { background:#111; color:#fff; border-color:#111; }
       .muted { color: var(--muted); font-size:12px; }
+      .errbox { display:none; background:#fee2e2; border:1px solid #fecaca; color:var(--err); padding:8px 12px; border-radius:10px; margin: 12px 0; font-size:13px; }
       code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
     </style>
 
@@ -23,19 +24,30 @@
     <!-- Recharts (UMD) -->
     <script src="https://unpkg.com/recharts/umd/Recharts.min.js"></script>
 
-    <!-- Babel (so we can write JSX here, no build step) -->
+    <!-- Babel Standalone (lets us write JSX in the browser) -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   </head>
   <body>
     <div class="wrap">
+      <div id="error" class="errbox"></div>
       <div id="root"></div>
     </div>
 
-    <script type="text/babel">
+    <!-- Tell Babel which presets to use -->
+    <script type="text/babel" data-presets="env,react">
+      // Show any runtime errors on the page (not just in the console)
+      (function attachErrorBox(){
+        const box = document.getElementById('error');
+        function show(msg){
+          box.style.display = 'block';
+          box.textContent = 'Error: ' + msg;
+        }
+        window.addEventListener('error', e => show(e.message));
+        window.addEventListener('unhandledrejection', e => show(e.reason && e.reason.message ? e.reason.message : String(e.reason)));
+      })();
+
       const { useEffect, useMemo, useState } = React;
-      const {
-        ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LabelList, Cell
-      } = Recharts;
+      const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LabelList, Cell } = Recharts;
 
       const METRICS = [
         { key: "totalGifts", label: "Total Gifts", fmt: v => "$" + Number(v).toLocaleString() },
@@ -56,8 +68,8 @@
         const [lastUpdated, setLastUpdated] = useState(null);
 
         useEffect(() => {
-          async function go(){
-            try{
+          (async () => {
+            try {
               setLoading(true);
               setError(null);
               const r = await fetch("/.netlify/functions/leaderboard", { cache: "no-store" });
@@ -65,22 +77,18 @@
               if(!r.ok) throw new Error(json?.error || "Failed to load");
               setRows(Array.isArray(json.rows) ? json.rows : []);
               setLastUpdated(new Date());
-            }catch(e){
+            } catch(e) {
               setError(String(e.message || e));
-            }finally{
+            } finally {
               setLoading(false);
             }
-          }
-          go();
+          })();
         }, []);
 
         const data = useMemo(() => {
           const arr = rows.map(r => ({ ...r, value: Number(r[metric]) || 0 }));
-          if (sortByValue) {
-            return [...arr].sort((a,b) => b.value - a.value);
-          } else {
-            return [...arr].sort((a,b) => a.year - b.year);
-          }
+          if (sortByValue) return [...arr].sort((a,b) => b.value - a.value);
+          return [...arr].sort((a,b) => a.year - b.year);
         }, [rows, metric, sortByValue]);
 
         const yMax = useMemo(() => {
@@ -88,9 +96,8 @@
           if (metric === "totalGifts") {
             const step = 1000;
             return Math.max(step, Math.ceil(max/step)*step);
-          } else {
-            return Math.max(100, Math.ceil(max));
           }
+          return Math.max(100, Math.ceil(max));
         }, [data, metric]);
 
         const fmtTick = v => (metric === "totalGifts" ? "$" + Number(v).toLocaleString() : v + "%");
@@ -101,7 +108,7 @@
         }, [rows]);
 
         return (
-          <div className="stack">
+          <div>
             <header className="card" style={{padding:"16px 16px 8px"}}>
               <h1 style={{margin:"0 0 6px"}}>FL — Live Leaderboard</h1>
               <div className="muted">Loads from Google Sheets (via Netlify Function)</div>
@@ -112,8 +119,8 @@
               <div className="row">
                 {METRICS.map(m => (
                   <button key={m.key} className="btn"
-                    aria-pressed={metric===m.key}
-                    onClick={()=>setMetric(m.key)}>{m.label}</button>
+                          aria-pressed={metric===m.key}
+                          onClick={()=>setMetric(m.key)}>{m.label}</button>
                 ))}
                 <label className="muted" style={{display:"inline-flex", gap:8, alignItems:"center", marginLeft:8}}>
                   <input type="checkbox" checked={sortByValue} onChange={e=>setSortByValue(e.target.checked)} />
