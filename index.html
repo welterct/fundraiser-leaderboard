@@ -52,11 +52,10 @@ const REORDER_MS = 1500;              // was 1200 → ~25% longer slide
       const { useEffect, useMemo, useRef, useState } = React;
 
       const METRICS = [
-        { key: "totalGifts", label: "Total Gifts", fmt: v => "$" + Number(v).toLocaleString() },
-        { key: "percentGivers", label: "% of Givers", fmt: v => Number(v).toFixed(1) + "%" },
-        { key: "percentRecurring", label: "% Recurring (people)", fmt: v => Number(v).toFixed(1) + "%" },
-        { key: "percentRecurringByGifts", label: "% Recurring (gifts)", fmt: v => Number(v).toFixed(1) + "%" },
-      ];
+  { key: "totalGifts", label: "Total Gifts", fmt: v => "$" + Math.round(Number(v)).toLocaleString() },
+  { key: "percentGivers", label: "% of Givers", fmt: v => Math.round(Number(v)) + "%" },
+];
+
 
       const COLORS = ["#f97316","#38bdf8","#34d399","#a78bfa","#fde047","#60a5fa","#22d3ee",
                       "#f59e0b","#84cc16","#14b8a6","#ec4899","#6366f1","#eab308","#10b981","#3b82f6"];
