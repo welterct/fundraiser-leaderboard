@@ -18,7 +18,6 @@
       .chart { height: 460px; }
       .svg-wrap { width: 100%; height: 100%; }
       svg { width: 100%; height: 100%; display:block; }
-      /* allow CSS transforms on SVG groups to look crisp */
       g.bar { will-change: transform; }
     </style>
 
@@ -34,12 +33,13 @@
     </div>
 
     <script type="text/babel" data-presets="env,react">
-      // on-page error display so we never get a silent blank page
-      // Animation timings (ms)
-const RISE_MS = 4800;                 // was 1200 → now 2x slower
-const PAUSE_BEFORE_REORDER_MS = 1500; // was 800 → a bit longer pause
-const REORDER_MS = 1500;              // was 1200 → ~25% longer slide
-(function attachErrorBox(){
+      // Animation timings (ms) — your custom speeds
+      const RISE_MS = 4800;
+      const PAUSE_BEFORE_REORDER_MS = 1500;
+      const REORDER_MS = 1500;
+
+      // Show any runtime errors in-page
+      (function attachErrorBox(){
         const box = document.getElementById('error');
         function show(msg){
           box.style.display = 'block';
@@ -51,25 +51,24 @@ const REORDER_MS = 1500;              // was 1200 → ~25% longer slide
 
       const { useEffect, useMemo, useRef, useState } = React;
 
+      // Only the two metrics you want, with whole-number formatting
       const METRICS = [
-  { key: "totalGifts", label: "Total Gifts", fmt: v => "$" + Math.round(Number(v)).toLocaleString() },
-  { key: "percentGivers", label: "% of Givers", fmt: v => Math.round(Number(v)) + "%" },
-];
-
+        { key: "totalGifts", label: "Total Gifts", fmt: v => "$" + Math.round(Number(v)).toLocaleString() },
+        { key: "percentGivers", label: "% of Givers", fmt: v => Math.round(Number(v)) + "%" },
+      ];
 
       const COLORS = ["#f97316","#38bdf8","#34d399","#a78bfa","#fde047","#60a5fa","#22d3ee",
                       "#f59e0b","#84cc16","#14b8a6","#ec4899","#6366f1","#eab308","#10b981","#3b82f6"];
 
       // Keep colors fixed per year
-const BASE_YEAR = 1999; // adjust if you want a different anchor
-const colorForYear = (y) => {
-  const len = COLORS.length;
-  const idx = ((y - BASE_YEAR) % len + len) % len; // safe modulo
-  return COLORS[idx];
-};
+      const BASE_YEAR = 1999;
+      const colorForYear = (y) => {
+        const len = COLORS.length;
+        const idx = ((y - BASE_YEAR) % len + len) % len; // safe modulo
+        return COLORS[idx];
+      };
 
-      
-      // y-axis ticks helper
+      // Y-axis ticks helper
       function niceTicks(max, count = 5) {
         if (max <= 0 || !isFinite(max)) return [0, 1];
         const rough = max / count;
@@ -83,7 +82,6 @@ const colorForYear = (y) => {
         return out;
       }
 
-      // easing
       const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
 
       function App(){
@@ -93,12 +91,12 @@ const colorForYear = (y) => {
         const [error, setError] = useState(null);
         const [lastUpdated, setLastUpdated] = useState(null);
 
-        // animation state
+        // animation
         const [animated, setAnimated] = useState([]); // [{year, value}]
         const [sorted, setSorted] = useState(false);
         const [reordering, setReordering] = useState(false);
 
-        // layout
+        // responsive width
         const holderRef = useRef(null);
         const [width, setWidth] = useState(980);
         useEffect(() => {
@@ -127,10 +125,13 @@ const colorForYear = (y) => {
           })();
         }, []);
 
-        // prepare data & targets
-        const targets = useMemo(() => rows.map(r => ({ year: r.year, value: Number(r[metric]) || 0 })), [rows, metric]);
+        // targets for current metric
+        const targets = useMemo(
+          () => rows.map(r => ({ year: r.year, value: Number(r[metric]) || 0 })),
+          [rows, metric]
+        );
 
-        // max & ticks
+        // y max & ticks
         const yMax = useMemo(() => {
           const max = targets.reduce((m, d) => Math.max(m, d.value || 0), 0);
           if (metric === "totalGifts") {
@@ -139,11 +140,19 @@ const colorForYear = (y) => {
           }
           return 100;
         }, [targets, metric]);
-        const ticks = useMemo(() => metric === "totalGifts" ? niceTicks(yMax, 5) : [0,20,40,60,80,100], [yMax, metric]);
-        const fmtTick = v => (metric === "totalGifts" ? "$" + Number(v).toLocaleString() : v + "%");
+
+        const ticks = useMemo(
+          () => (metric === "totalGifts" ? niceTicks(yMax, 5) : [0,20,40,60,80,100]),
+          [yMax, metric]
+        );
+
+        const fmtTick = v => (metric === "totalGifts"
+          ? "$" + Math.round(Number(v)).toLocaleString()
+          : Math.round(Number(v)) + "%");
+
         const metricObj = METRICS.find(m => m.key === metric);
 
-        // play rise animation whenever metric or rows change
+        // rise animation + then reorder (FLIP)
         const rafRef = useRef(null);
         const FLIP_prevX = useRef(new Map());
         const barRefs = useRef(new Map());
@@ -152,8 +161,8 @@ const colorForYear = (y) => {
           if (rafRef.current) cancelAnimationFrame(rafRef.current);
           setSorted(false);
           setReordering(false);
-          // start at zeros
           setAnimated(targets.map(t => ({ year: t.year, value: 0 })));
+
           const start = performance.now();
           const duration = RISE_MS;
 
@@ -165,20 +174,18 @@ const colorForYear = (y) => {
             if (t < 1) {
               rafRef.current = requestAnimationFrame(step);
             } else {
-              // hold briefly, then reorder with FLIP
               setTimeout(() => startReorder(), PAUSE_BEFORE_REORDER_MS);
             }
           }
           rafRef.current = requestAnimationFrame(step);
         }
 
-        // run on data/metric change
         useEffect(() => {
           if (rows.length) playRise();
           // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [metric, rows.length]);
 
-        // compute display data from animated values
+        // animated display values
         const disp = useMemo(() => {
           const aMap = new Map(animated.map(a => [a.year, a.value]));
           const base = rows.map(r => ({
@@ -189,7 +196,7 @@ const colorForYear = (y) => {
           return [...base].sort((x,y) => x.year - y.year);
         }, [rows, animated, sorted]);
 
-        // layout dims
+        // layout
         const H = 420;
         const M = { top: 20, right: 20, bottom: 70, left: 70 };
         const innerW = Math.max(320, width) - M.left - M.right;
@@ -205,9 +212,8 @@ const colorForYear = (y) => {
           return M.top + (1 - t) * innerH;
         };
 
-        // FLIP reorder: capture old X, then sort, then animate to new X
+        // FLIP capture → sort → animate
         function startReorder() {
-          // capture current centers
           const prev = new Map();
           disp.forEach((d, i) => prev.set(d.year, xPos(i) + barW/2));
           FLIP_prevX.current = prev;
@@ -216,12 +222,10 @@ const colorForYear = (y) => {
           setReordering(true);
         }
 
-        // after sorted render, do the flip animation
         useEffect(() => {
           if (!reordering) return;
-          // allow DOM paint
           requestAnimationFrame(() => {
-            // position jump to old place, then animate to 0
+            // jump to old x
             disp.forEach((d, i) => {
               const node = barRefs.current.get(d.year);
               if (!node) return;
@@ -236,6 +240,7 @@ const colorForYear = (y) => {
             // force reflow
             void document.body.offsetHeight;
 
+            // animate to new x
             disp.forEach((d) => {
               const node = barRefs.current.get(d.year);
               if (!node) return;
@@ -243,11 +248,10 @@ const colorForYear = (y) => {
               node.style.transform = "translate(0px, 0px)";
             });
 
-            // cleanup flag
             setTimeout(() => setReordering(false), REORDER_MS + 100);
           });
           // eslint-disable-next-line react-hooks/exhaustive-deps
-        }, [reordering, width]); // width matters because x positions scale with container
+        }, [reordering, width]);
 
         const topText = useMemo(() => {
           const tops = [...rows].sort((a,b)=> (b.totalGifts||0)-(a.totalGifts||0)).slice(0,3)
@@ -292,7 +296,7 @@ const colorForYear = (y) => {
                   {/* X axis baseline */}
                   <line x1={M.left} y1={H - M.bottom} x2={Math.max(320,width) - M.right} y2={H - M.bottom} stroke="#ddd" />
 
-                  {/* Bars + labels in groups (so FLIP can move both) */}
+                  {/* Bars + labels (color fixed per year) */}
                   {disp.map((d, i) => {
                     const x = xPos(i);
                     const y = yPos(d.value);
@@ -305,11 +309,9 @@ const colorForYear = (y) => {
                         <rect x={x} y={y} width={barW} height={Math.max(0, h)} fill={color} rx="8" ry="8">
                           <title>{`Class of ${d.year}\n${metricObj.label}: ${metricObj.fmt(d.value)}`}</title>
                         </rect>
-                        {/* value label on top of bar (optional) */}
                         <text x={cx} y={y - 6} textAnchor="middle" fontSize="11" fill="#111">
                           {metricObj.fmt(d.value)}
                         </text>
-                        {/* rotated year label */}
                         <text x={cx} y={H - M.bottom + 14} fontSize="10" fill="#111"
                               textAnchor="end" transform={`rotate(-45 ${cx} ${H - M.bottom + 14})`}>
                           {d.year}
