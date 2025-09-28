@@ -2,13 +2,16 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Through the Years — Fundraiser Leaderboard</title>
+    <title>GMV Young Life — Fundraiser Leaderboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
       :root {
-        --bg:#f7f7fb; --card:#fff; --border:#e6e7eb; --text:#0f172a; --muted:#64748b; --brand:#111827;
+        --bg:#f5f7fb; --card:#ffffff; --border:#e5e7eb; --text:#0b1220; --muted:#6b7280;
+        --brand:#0f2e4d; /* navy */
+        --accent:#c7d301; /* YL lime */
+        --accent2:#1bb3a9; /* teal */
       }
       * { box-sizing: border-box; }
       body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:var(--bg); color:var(--text); }
@@ -30,30 +33,58 @@
       g.bar { will-change: transform; }
       footer { color: var(--muted); font-size: 12px; padding: 16px 0 0; }
       .errbox { display:none; background:#fee2e2; border:1px solid #fecaca; color:#b91c1c; padding:8px 12px; border-radius:10px; margin: 12px 0; font-size:13px; }
+      .logo{height:28px;width:auto;display:block;}
+      .main-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(260px,1fr);gap:16px;align-items:start;margin-top:8px;}
+      @media (max-width: 900px){.main-grid{grid-template-columns:1fr}}
+      .aside{padding:16px}
+      .aside h2{margin:0 0 8px;font-size:18px}
+      .qr-wrap{display:flex;align-items:center;justify-content:center;padding:8px;border:1px dashed var(--border);border-radius:12px;background:#fff;margin:8px 0 12px}
+      .qr{width:100%;max-width:220px;height:auto}
+      .btn-cta{display:inline-block;padding:10px 14px;border-radius:12px;font-weight:600;text-decoration:none;background:var(--brand);color:#fff;border:1px solid var(--brand)}
+      .btn-cta:hover{filter:brightness(.95)}
+      /* Make selected metric button use brand color */
+      .btn[aria-pressed="true"]{background:var(--brand);color:#fff;border-color:var(--brand)}
     </style>
 
     <!-- React + ReactDOM + Babel (no build step) -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+      <!-- Favicon: using existing PNG logo for now -->
+    <link rel="icon" type="image/png" href="/yl-logo.png">
   </head>
   <body>
     <div class="wrap">
       <nav class="nav">
         <div class="brand">
-          <span class="brand-badge"></span>
-          Through the Years
+          <img src="yl-logo.png" class="logo" alt="Young Life logo" />
+          GMV Young Life
         </div>
       </nav>
 
       <section class="hero">
         <h1>Fundraiser Leaderboard</h1>
-        <div class="sub">Class performance over time</div>
+        <div class="sub">Great Miami Valley Young Life</div>
       </section>
 
       <div id="error" class="errbox"></div>
 
-      <div id="root"></div>
+      <div class="main-grid">
+        <div id="root"></div>
+        <aside class="aside card">
+          <div class="aside-inner">
+            <h2>Support GMV Young Life</h2>
+            <p class="muted">Your gift fuels leaders, clubs, and camps across the Great Miami Valley.</p>
+            <div class="qr-wrap">
+              <!-- Replace qr.png with your real QR image -->
+              <img src="qr.png" alt="Donate QR code" class="qr" />
+            </div>
+            <!-- Replace the href with your giving page URL -->
+            <a id="donate-link" class="btn-cta" href="#" target="_blank" rel="noopener">Give Online</a>
+            <p class="muted small">Scan the code or tap the button.</p>
+          </div>
+        </aside>
+      </div>
 
       <footer id="foot" class="muted"></footer>
     </div>
@@ -140,9 +171,8 @@
               const arr = Array.isArray(json.rows) ? json.rows : [];
               setRows(arr);
               setLastUpdated(new Date());
-              // Set subtle footer timestamp (no big debug copy)
               const foot = document.getElementById('foot');
-              foot.textContent = lastUpdated ? "" : ""; // placeholder during first paint
+              foot.textContent = lastUpdated ? "" : "";
             } catch(e) {
               setError(String(e.message || e));
             } finally {
@@ -214,7 +244,6 @@
 
         useEffect(() => {
           if (rows.length) playRise();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [metric, rows.length]);
 
         // animated display values
@@ -282,7 +311,6 @@
 
             setTimeout(() => setReordering(false), REORDER_MS + 100);
           });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [reordering, width]);
 
         return (
