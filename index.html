@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>GMV Young Life — Fundraiser Leaderboard</title>
+    <title>GMV Young Life — Leaderboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
@@ -17,7 +17,7 @@
       body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:var(--bg); color:var(--text); }
       .wrap { max-width: 1100px; margin: 0 auto; padding: 24px; }
       .nav { display:flex; align-items:center; justify-content:space-between; padding:14px 0; }
-      .brand { display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:.2px; }
+      .brand { display:flex; align-items:center; gap:12px; font-weight:800; letter-spacing:.2px; font-size:20px; }
       .brand-badge { width:28px; height:28px; border-radius:8px; background:linear-gradient(135deg,#111827,#3b82f6); }
       .hero { padding: 24px 0 8px; }
       h1 { font-size: clamp(24px, 4vw, 36px); line-height:1.1; margin: 0 0 6px; font-weight:800; }
@@ -33,13 +33,13 @@
       g.bar { will-change: transform; }
       footer { color: var(--muted); font-size: 12px; padding: 16px 0 0; }
       .errbox { display:none; background:#fee2e2; border:1px solid #fecaca; color:#b91c1c; padding:8px 12px; border-radius:10px; margin: 12px 0; font-size:13px; }
-      .logo{height:28px;width:auto;display:block;}
+      .logo{height:36px;width:auto;display:block;}
       .main-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(260px,1fr);gap:16px;align-items:start;margin-top:8px;}
       @media (max-width: 900px){.main-grid{grid-template-columns:1fr}}
       .aside{padding:16px}
       .aside h2{margin:0 0 8px;font-size:18px}
       .qr-wrap{display:flex;align-items:center;justify-content:center;padding:8px;border:1px dashed var(--border);border-radius:12px;background:#fff;margin:8px 0 12px}
-      .qr{width:100%;max-width:220px;height:auto}
+      .qr{width:100%;max-width:140px;height:auto}
       .btn-cta{display:inline-block;padding:10px 14px;border-radius:12px;font-weight:600;text-decoration:none;background:var(--brand);color:#fff;border:1px solid var(--brand)}
       .btn-cta:hover{filter:brightness(.95)}
       /* Make selected metric button use brand color */
@@ -63,8 +63,7 @@
       </nav>
 
       <section class="hero">
-        <h1>Fundraiser Leaderboard</h1>
-        <div class="sub">Great Miami Valley Young Life</div>
+        <h1>Leaderboard<\/h1>
       </section>
 
       <div id="error" class="errbox"></div>
