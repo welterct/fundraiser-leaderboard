@@ -44,6 +44,10 @@
       .btn-cta:hover{filter:brightness(.95)}
       /* Make selected metric button use brand color */
       .btn[aria-pressed="true"]{background:var(--brand);color:#fff;border-color:var(--brand)}
+    .hero-brand{display:flex;align-items:center;gap:12px}
+      .hero-logo{height:64px;width:auto;display:block}
+      .hero-title{margin:0;font-size:clamp(28px,5vw,48px);line-height:1.1;font-weight:800}
+      .hero-sub{margin:6px 0 0;font-size:clamp(16px,3vw,22px);font-weight:600;color:var(--text)}
     </style>
 
     <!-- React + ReactDOM + Babel (no build step) -->
@@ -55,15 +59,14 @@
   </head>
   <body>
     <div class="wrap">
-      <nav class="nav">
-        <div class="brand">
-          <img src="yl-logo.png" class="logo" alt="Young Life logo" />
-          GMV Young Life
-        </div>
-      </nav>
+      
 
       <section class="hero">
-        <h1>Leaderboard<\/h1>
+        <div class="hero-brand">
+          <img src="yl-logo.png" class="hero-logo" alt="Young Life logo" />
+          <h1 class="hero-title">GMV Young Life</h1>
+        </div>
+        <h2 class="hero-sub">Leaderboard</h2>
       </section>
 
       <div id="error" class="errbox"></div>
