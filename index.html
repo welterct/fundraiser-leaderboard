@@ -49,8 +49,9 @@
       .hero-title{margin:0;font-size:clamp(28px,5vw,48px);line-height:1.1;font-weight:800}
       .hero-sub{margin:6px 0 0;font-size:clamp(16px,3vw,22px);font-weight:600;color:var(--text)}
     .impact{margin-top:16px;padding:16px}
-      .stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-      @media (max-width:900px){.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+      .stats-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+      @media (max-width:1100px){.stats-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+      @media (max-width:700px){.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
       .stat{position:relative;background:#fff;border:1px solid var(--border);border-radius:14px;padding:12px 14px}
       .stat::before{content:"";position:absolute;left:0;top:0;height:4px;width:100%;background:var(--accent);border-top-left-radius:14px;border-top-right-radius:14px}
       .stat-num{font-size:clamp(24px,4vw,40px);font-weight:800;line-height:1;margin-top:8px}
@@ -119,10 +120,13 @@
             <div class="stat-num">691</div>
             <div class="stat-label">Kids went to Fall Weekend</div>
           </div>
-          $1
+          <div class="stat">
+            <div class="stat-num">563</div>
+            <div class="stat-label">Kids went to Summer Camp</div>
+          </div>
           <div class="stat">
             <div class="stat-num">30%</div>
-            <div class="stat-label">30% more campers this year</div>
+            <div class="stat-label">More campers this year</div>
           </div>
         </div>
       </section>
