@@ -36,10 +36,11 @@
       /* LAYOUT: main (chart + aside) */
       .main-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(260px,1fr);gap:16px;align-items:start;margin-top:8px;}
       @media (max-width: 900px){.main-grid{grid-template-columns:1fr}}
-      .chart { height: 460px; }
+      .chart { height: 460px; position: relative; }
       .svg-wrap { width: 100%; height: 100%; padding:12px; }
       svg { width: 100%; height: 100%; display:block; }
       g.bar { will-change: transform; }
+      .nodata{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--muted)}
 
       .aside{padding:16px}
       .aside h2{margin:0 0 8px;font-size:18px}
@@ -95,7 +96,7 @@
       <!-- HERO -->
       <section class="hero">
         <div class="hero-brand">
-          <img src="yl-logo.png" class="hero-logo" alt="Young Life logo" />
+          <img src="yl-logo.png" class="hero-logo" alt="Young Life logo" width="64" height="64" />
           <h1 class="hero-title">GMV Young Life</h1>
         </div>
         <h2 class="hero-sub">Leaderboard</h2>
@@ -111,7 +112,7 @@
             <h2>Support GMV Young Life</h2>
             <p class="muted">Your gift fuels leaders, clubs, and camps across Butler County.</p>
             <div class="qr-wrap">
-              <img src="qr.png" alt="Donate QR code" class="qr" />
+              <img src="qr.png" alt="Donate QR code" class="qr" width="140" height="140" loading="lazy" />
             </div>
             <a id="donate-link" class="btn-cta" href="https://giving.younglife.org/legacyleaders" target="_blank" rel="noopener">Give Online</a>
             <p class="muted small">Scan the code or tap the button.</p>
@@ -135,7 +136,7 @@
       <section class="story card" aria-labelledby="story-heading">
         <div class="story-grid">
           <figure style="margin:0">
-            <img src="leaders.jpg" alt="GMV Young Life leaders on the field" class="story-img" />
+            <img src="leaders.jpg" alt="GMV Young Life leaders on the field" class="story-img" width="1200" height="800" />
             <figcaption class="caption">GMV Young Life leaders • Fall Leader Retreat 2025</figcaption>
           </figure>
           <div class="story-body">
@@ -154,7 +155,7 @@
         <!-- Story 2: WyldLife -->
         <div class="story-row">
           <figure style="margin:0">
-            <img src="wyldlife.jpg" alt="Middle school WyldLife club gathered in a living room" class="story-img" loading="lazy" />
+            <img src="wyldlife.jpg" alt="Middle school WyldLife club gathered in a living room" class="story-img" loading="lazy" width="1200" height="900" />
             <figcaption class="caption">Wild Wednesday - Fall 2025</figcaption>
           </figure>
           <div class="story-copy">
@@ -172,7 +173,7 @@
             <p>He came to camp, prayed to accept Jesus, and this fall got baptized. Dean is stepping into the full life Jesus promised.</p>
           </div>
           <figure style="margin:0">
-            <img src="dean.jpg" alt="Student smiling in the back of a Jeep after club" class="story-img" loading="lazy" />
+            <img src="dean.jpg" alt="Student smiling in the back of a Jeep after club" class="story-img" loading="lazy" width="1200" height="900" />
             <figcaption class="caption">Life to the Full</figcaption>
           </figure>
         </div>
@@ -181,13 +182,28 @@
       <footer id="foot" class="muted"></footer>
     </div>
 
-    <!-- CHART APP (unchanged) -->
+    <!-- CHART APP -->
     <script type="text/babel" data-presets="env,react">
       const RISE_MS = 4800, PAUSE_BEFORE_REORDER_MS = 1500, REORDER_MS = 1500;
-      (function(){const b=document.getElementById('error');function s(m){b.style.display='block';b.textContent='Error: '+m;}
-        window.addEventListener('error',e=>s(e.message));window.addEventListener('unhandledrejection',e=>s(e.reason&&e.reason.message?e.reason.message:String(e.reason)));})();
+
+      // Error surface
+      (function(){
+        const b=document.getElementById('error');
+        function s(m){b.style.display='block';b.textContent='Error: '+m;}
+        window.addEventListener('error',e=>s(e.message));
+        window.addEventListener('unhandledrejection',e=>s(e.reason&&e.reason.message?e.reason.message:String(e.reason)));
+      })();
+
       const { useEffect, useMemo, useRef, useState } = React;
 
+      // --- helpers ---
+      function toNumber(x){
+        if (x == null) return 0;
+        if (typeof x === 'number') return Number.isFinite(x) ? x : 0;
+        const s = String(x).trim().replace(/[$,]/g,'').replace(/%/g,'');
+        const n = Number(s);
+        return Number.isFinite(n) ? n : 0;
+      }
       const METRICS = [
         { key: "totalGifts", label: "Total Gifts", fmt: v => "$" + Math.round(Number(v)).toLocaleString() },
         { key: "percentGivers", label: "% of Givers", fmt: v => Math.round(Number(v)) + "%" },
@@ -195,8 +211,12 @@
       const COLORS = ["#f97316","#38bdf8","#34d399","#a78bfa","#fde047","#60a5fa","#22d3ee","#f59e0b","#84cc16","#14b8a6","#ec4899","#6366f1","#eab308","#10b981","#3b82f6"];
       const BASE_YEAR = 1999;
       const colorForYear = y => COLORS[(((y-BASE_YEAR)%COLORS.length)+COLORS.length)%COLORS.length];
-      function niceTicks(max,count=5){ if(max<=0||!isFinite(max))return[0,1]; const rough=max/count; const pow10=Math.pow(10,Math.floor(Math.log10(rough))); let nice=pow10;
-        if(rough/pow10>=5) nice=5*pow10; else if(rough/pow10>=2) nice=2*pow10; const top=Math.ceil(max/nice)*nice; const out=[]; for(let v=0; v<=top+1e-9; v+=nice) out.push(v); return out; }
+      function niceTicks(max,count=5){
+        if(max<=0||!isFinite(max))return[0,1];
+        const rough=max/count; const pow10=Math.pow(10,Math.floor(Math.log10(rough)));
+        let nice=pow10; if(rough/pow10>=5) nice=5*pow10; else if(rough/pow10>=2) nice=2*pow10;
+        const top=Math.ceil(max/nice)*nice; const out=[]; for(let v=0; v<=top+1e-9; v+=nice) out.push(v); return out;
+      }
       const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
 
       function App(){
@@ -205,72 +225,157 @@
         const [error, setError] = useState(null); const [lastUpdated, setLastUpdated] = useState(null);
         const [animated, setAnimated] = useState([]); const [sorted, setSorted] = useState(false); const [reordering, setReordering] = useState(false);
 
+        // responsive width with rAF-throttle
         const holderRef = useRef(null); const [width, setWidth] = useState(980);
-        useEffect(()=>{const set=()=>setWidth(holderRef.current?holderRef.current.clientWidth:980); set(); window.addEventListener('resize',set); return ()=>window.removeEventListener('resize',set);},[]);
+        useEffect(()=>{
+          let raf = null;
+          const measure = () => {
+            raf = null;
+            setWidth(holderRef.current ? holderRef.current.clientWidth : 980);
+          };
+          const onResize = () => { if (raf == null) raf = requestAnimationFrame(measure); };
+          onResize(); // initial
+          window.addEventListener('resize', onResize);
+          return ()=>{ if (raf) cancelAnimationFrame(raf); window.removeEventListener('resize', onResize); };
+        },[]);
 
-        useEffect(()=>{(async()=>{try{setLoading(true);setError(null);
-          const r=await fetch("/.netlify/functions/leaderboard",{cache:"no-store"}); const json=await r.json();
-          if(!r.ok) throw new Error(json?.error||"Failed to load"); const arr=Array.isArray(json.rows)?json.rows:[]; setRows(arr); setLastUpdated(new Date());
-          document.getElementById('foot').textContent=""; }catch(e){ setError(String(e.message||e)); }finally{ setLoading(false); }})();},[]);
+        // fetch + sanitize once
+        useEffect(()=>{(async()=>{
+          try{
+            setLoading(true); setError(null);
+            const r=await fetch("/.netlify/functions/leaderboard",{cache:"no-store"}); // remove no-store if your function sets cache headers
+            const json=await r.json();
+            if(!r.ok) throw new Error(json?.error||"Failed to load");
+            const arr=Array.isArray(json.rows)?json.rows:[];
+            const clean = arr.map(row => ({
+              ...row,
+              year: Number(row.year),
+              totalGifts: toNumber(row.totalGifts),
+              percentGivers: toNumber(row.percentGivers)
+            }));
+            setRows(clean);
+            setLastUpdated(new Date());
+            document.getElementById('foot').textContent = "";
+          }catch(e){ setError(String(e.message||e)); }
+          finally{ setLoading(false); }
+        })();},[]);
+
         useEffect(()=>{ if(lastUpdated){ document.getElementById('foot').textContent=`Last updated: ${lastUpdated.toLocaleTimeString()}`;} },[lastUpdated]);
 
-        const targets = useMemo(()=>rows.map(r=>({year:r.year,value:Number(r[metric])||0})),[rows,metric]);
-        const yMax = useMemo(()=>{ const max=targets.reduce((m,d)=>Math.max(m,d.value||0),0); return metric==="totalGifts"?Math.max(1000,Math.ceil(max/1000)*1000):100; },[targets,metric]);
+        const targets = useMemo(()=>rows.map(r=>({year:r.year,value: toNumber(r[metric])})),[rows,metric]);
+        const yMax = useMemo(()=>{
+          const max=targets.reduce((m,d)=>Math.max(m,d.value||0),0);
+          return metric==="totalGifts"?Math.max(1000,Math.ceil(max/1000)*1000):100;
+        },[targets,metric]);
         const ticks = useMemo(()=> metric==="totalGifts"?niceTicks(yMax,5):[0,20,40,60,80,100],[yMax,metric]);
         const fmtTick = v => (metric==="totalGifts"?"$"+Math.round(Number(v)).toLocaleString():Math.round(Number(v))+"%");
         const metricObj = METRICS.find(m=>m.key===metric);
 
+        // FLIP bookkeeping
         const rafRef=useRef(null), FLIP_prevX=useRef(new Map()), barRefs=useRef(new Map());
-        function playRise(){ if(rafRef.current) cancelAnimationFrame(rafRef.current); setSorted(false); setReordering(false); setAnimated(targets.map(t=>({year:t.year,value:0})));
-          const start=performance.now(); function step(now){const t=Math.min(1,(now-start)/RISE_MS); const eased=easeOutCubic(t);
+        // reset refs map when the order changes to avoid stale nodes
+        useEffect(()=>{ barRefs.current = new Map(); }, [metric, rows.length]);
+
+        function playRise(){
+          if(rafRef.current) cancelAnimationFrame(rafRef.current);
+          setSorted(false); setReordering(false); setAnimated(targets.map(t=>({year:t.year,value:0})));
+          const start=performance.now();
+          function step(now){
+            const t=Math.min(1,(now-start)/RISE_MS); const eased=easeOutCubic(t);
             setAnimated(targets.map(tgt=>({year:tgt.year,value:tgt.value*eased})));
-            if(t<1){ rafRef.current=requestAnimationFrame(step);} else { setTimeout(()=>startReorder(),PAUSE_BEFORE_REORDER_MS);} } rafRef.current=requestAnimationFrame(step);
+            if(t<1){ rafRef.current=requestAnimationFrame(step);} else { setTimeout(()=>startReorder(),PAUSE_BEFORE_REORDER_MS); }
+          }
+          rafRef.current=requestAnimationFrame(step);
         }
         useEffect(()=>{ if(rows.length) playRise(); },[metric,rows.length]);
 
-        const disp = useMemo(()=>{ const aMap=new Map(animated.map(a=>[a.year,a.value])); const base=rows.map(r=>({...r,value:aMap.get(r.year)||0}));
-          return (sorted?[...base].sort((x,y)=>y.value-x.value):[...base].sort((x,y)=>x.year-y.year)); },[rows,animated,sorted]);
+        const disp = useMemo(()=>{
+          const aMap=new Map(animated.map(a=>[a.year,a.value]));
+          const base=rows.map(r=>({...r,value:aMap.get(r.year)||0}));
+          return (sorted?[...base].sort((x,y)=>y.value-x.value):[...base].sort((x,y)=>x.year-y.year));
+        },[rows,animated,sorted]);
 
         const H=420, M={top:20,right:20,bottom:70,left:70}; const innerW=Math.max(320,width)-M.left-M.right; const innerH=H-M.top-M.bottom;
         const n=disp.length||1; const band=innerW/n; const barPad=Math.min(12,band*0.2); const barW=Math.max(2,band-barPad);
-        const xPos=i=>M.left+i*band+(band-barW)/2; const yPos=v=>{const maxV=metric==="totalGifts"?yMax:100; const t=Math.min(1,Math.max(0,(v||0)/(maxV||1))); return M.top+(1-t)*innerH; };
+        const xPos=i=>M.left+i*band+(band-barW)/2;
+        const yPos=v=>{const maxV=metric==="totalGifts"?yMax:100; const t=Math.min(1,Math.max(0,(v||0)/(maxV||1))); return M.top+(1-t)*innerH; };
 
-        function startReorder(){ const prev=new Map(); disp.forEach((d,i)=>prev.set(d.year,xPos(i)+barW/2)); FLIP_prevX.current=prev; setSorted(true); setReordering(true); }
-        useEffect(()=>{ if(!reordering) return; requestAnimationFrame(()=>{ disp.forEach((d,i)=>{const node=barRefs.current.get(d.year); if(!node) return;
-              const prevX=FLIP_prevX.current.get(d.year)||0; const newX=xPos(i)+barW/2; const delta=prevX-newX; node.style.transition="none"; node.style.transform=`translate(${delta}px,0px)`; });
-            void document.body.offsetHeight; disp.forEach(d=>{const node=barRefs.current.get(d.year); if(!node) return;
-              node.style.transition=`transform ${REORDER_MS}ms cubic-bezier(0.22,1,0.36,1)`; node.style.transform="translate(0px,0px)"; });
-            setTimeout(()=>setReordering(false),REORDER_MS+100); }); },[reordering,width]);
+        function startReorder(){
+          const prev=new Map(); disp.forEach((d,i)=>prev.set(d.year,xPos(i)+barW/2)); FLIP_prevX.current=prev; setSorted(true); setReordering(true);
+        }
+        useEffect(()=>{
+          if(!reordering) return;
+          requestAnimationFrame(()=>{
+            disp.forEach((d,i)=>{
+              const node=barRefs.current.get(d.year); if(!node) return;
+              const prevX=FLIP_prevX.current.get(d.year)||0; const newX=xPos(i)+barW/2; const delta=prevX-newX;
+              node.style.transition="none"; node.style.transform=`translate(${delta}px,0px)`;
+            });
+            void document.body.offsetHeight; // reflow
+            disp.forEach(d=>{
+              const node=barRefs.current.get(d.year); if(!node) return;
+              node.style.transition=`transform ${REORDER_MS}ms cubic-bezier(0.22,1,0.36,1)`; node.style.transform="translate(0px,0px)";
+            });
+            setTimeout(()=>setReordering(false),REORDER_MS+100);
+          });
+        },[reordering,width,disp]);
+
+        const chartWidth = Math.max(320,width);
 
         return (
           <div>
             <header className="card" style={{padding:"16px"}}>
               <div className="row" role="group" aria-label="Choose metric">
                 {METRICS.map(m => (
-                  <button key={m.key} className="btn" aria-pressed={metric===m.key} onClick={()=>setMetric(m.key)}>{m.label}</button>
+                  <button
+                    key={m.key}
+                    className="btn"
+                    aria-pressed={metric===m.key}
+                    aria-controls="chart"
+                    onClick={()=>setMetric(m.key)}
+                  >
+                    {m.label}
+                  </button>
                 ))}
               </div>
             </header>
 
-            <section className="card chart">
+            <section className="card chart" aria-live="polite">
+              {(!rows.length && !loading) && <div className="nodata">No data available.</div>}
               <div ref={holderRef} className="svg-wrap">
-                <svg viewBox={`0 0 ${Math.max(320,width)} ${H}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Leaderboard bar chart">
-                  {ticks.map((t,i)=>{const y=yPos(t);return(<g key={`tick-${i}`}><line x1={M.left} y1={y} x2={Math.max(320,width)-M.right} y2={y} stroke="#eee"/><text x={M.left-10} y={y+4} textAnchor="end" fontSize="12" fill="#111">{fmtTick(t)}</text></g>)})}
-                  <line x1={M.left} y1={H-M.bottom} x2={Math.max(320,width)-M.right} y2={H-M.bottom} stroke="#ddd" />
-                  {disp.map((d,i)=>{const x=xPos(i), y=yPos(d.value), h=(H-M.bottom)-y, color=colorForYear(d.year), cx=x+barW/2;
-                    return(<g key={d.year} className="bar" ref={el=>{if(el) barRefs.current.set(d.year,el);}}>
-                      <rect x={x} y={y} width={barW} height={Math.max(0,h)} fill={color} rx="8" ry="8">
-                        <title>{`Class of ${d.year}\n${metricObj.label}: ${metricObj.fmt(d.value)}`}</title>
-                      </rect>
-                      <text x={cx} y={y-6} textAnchor="middle" fontSize="11" fill="#111">{metricObj.fmt(d.value)}</text>
-                      <text x={cx} y={H-M.bottom+14} fontSize="10" fill="#111" textAnchor="end" transform={`rotate(-45 ${cx} ${H-M.bottom+14})`}>{d.year}</text>
-                    </g>)})}
+                <svg id="chart" viewBox={`0 0 ${chartWidth} ${H}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Leaderboard bar chart">
+                  {ticks.map((t,i)=>{
+                    const y=yPos(t);
+                    return(
+                      <g key={`tick-${i}`}>
+                        <line x1={M.left} y1={y} x2={chartWidth-M.right} y2={y} stroke="#eee"/>
+                        <text x={M.left-10} y={y+4} textAnchor="end" fontSize="12" fill="#111">{fmtTick(t)}</text>
+                      </g>
+                    );
+                  })}
+                  <line x1={M.left} y1={H-M.bottom} x2={chartWidth-M.right} y2={H-M.bottom} stroke="#ddd" />
+                  {disp.map((d,i)=>{
+                    const x=xPos(i), y=yPos(d.value), h=(H-M.bottom)-y, color=colorForYear(d.year), cx=x+barW/2;
+                    const showValue = h > 18; // avoid label-overlap on tiny bars
+                    return(
+                      <g key={d.year} className="bar" ref={el=>{ if(el) barRefs.current.set(d.year,el); }}>
+                        <rect x={x} y={y} width={barW} height={Math.max(0,h)} fill={color} rx="8" ry="8">
+                          <title>{`Class of ${d.year}\n${metricObj.label}: ${metricObj.fmt(d.value)}`}</title>
+                        </rect>
+                        {showValue && (
+                          <text x={cx} y={y-6} textAnchor="middle" fontSize="11" fill="#111">{metricObj.fmt(d.value)}</text>
+                        )}
+                        <text x={cx} y={H-M.bottom+14} fontSize="10" fill="#111" textAnchor="end" transform={`rotate(-45 ${cx} ${H-M.bottom+14})`}>{d.year}</text>
+                      </g>
+                    );
+                  })}
                 </svg>
               </div>
             </section>
           </div>
         );
       }
+
       ReactDOM.createRoot(document.getElementById("root")).render(<App />);
     </script>
   </body>
