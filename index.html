@@ -6,49 +6,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="/yl-logo.png">
     <style>
       :root {
         --bg:#f5f7fb; --card:#ffffff; --border:#e5e7eb; --text:#0b1220; --muted:#6b7280;
-        --brand:#0f2e4d; /* navy */
-        --accent:#c7d301; /* YL lime */
-        --accent2:#1bb3a9; /* teal */
+        --brand:#0f2e4d; /* navy */ --accent:#c7d301; /* YL lime */ --accent2:#1bb3a9; /* teal */
       }
       * { box-sizing: border-box; }
       body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:var(--bg); color:var(--text); }
       .wrap { max-width: 1100px; margin: 0 auto; padding: 24px; }
-      .nav { display:flex; align-items:center; justify-content:space-between; padding:14px 0; }
-      .brand { display:flex; align-items:center; gap:12px; font-weight:800; letter-spacing:.2px; font-size:20px; }
-      .brand-badge { width:28px; height:28px; border-radius:8px; background:linear-gradient(135deg,#111827,#3b82f6); }
-      .hero { padding: 24px 0 8px; }
-      h1 { font-size: clamp(24px, 4vw, 36px); line-height:1.1; margin: 0 0 6px; font-weight:800; }
-      .sub { color: var(--muted); font-size: 14px; }
+
+      /* HERO */
+      .hero { padding: 8px 0 8px; }
+      .hero-brand{display:flex;align-items:center;gap:12px}
+      .hero-logo{height:64px;width:auto;display:block}
+      .hero-title{margin:0;font-size:clamp(28px,5vw,48px);line-height:1.1;font-weight:800}
+      .hero-sub{margin:6px 0 0;font-size:clamp(16px,3vw,22px);font-weight:600;color:var(--text)}
+
+      /* CARDS / BUTTONS */
       .card { background:var(--card); border:1px solid var(--border); border-radius:16px; box-shadow: 0 1px 4px rgba(10,10,10,.04); }
       .row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
       .btn { padding:8px 12px; border:1px solid var(--border); border-radius:12px; background:#fff; cursor:pointer; font-size:14px; }
-      .btn[aria-pressed="true"] { background:#111; color:#fff; border-color:#111; }
+      .btn[aria-pressed="true"]{background:var(--brand);color:#fff;border-color:var(--brand)}
+      .btn-cta{display:inline-block;padding:10px 14px;border-radius:12px;font-weight:600;text-decoration:none;background:var(--brand);color:#fff;border:1px solid var(--brand)}
+      .btn-cta:hover{filter:brightness(.95)}
       .muted { color: var(--muted); font-size:12px; }
-      .chart { height: 460px; margin-top:16px; }
+      .errbox { display:none; background:#fee2e2; border:1px solid #fecaca; color:#b91c1c; padding:8px 12px; border-radius:10px; margin: 12px 0; font-size:13px; }
+
+      /* LAYOUT: main (chart + aside) */
+      .main-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(260px,1fr);gap:16px;align-items:start;margin-top:8px;}
+      @media (max-width: 900px){.main-grid{grid-template-columns:1fr}}
+      .chart { height: 460px; }
       .svg-wrap { width: 100%; height: 100%; padding:12px; }
       svg { width: 100%; height: 100%; display:block; }
       g.bar { will-change: transform; }
-      footer { color: var(--muted); font-size: 12px; padding: 16px 0 0; }
-      .errbox { display:none; background:#fee2e2; border:1px solid #fecaca; color:#b91c1c; padding:8px 12px; border-radius:10px; margin: 12px 0; font-size:13px; }
-      .logo{height:36px;width:auto;display:block;}
-      .main-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(260px,1fr);gap:16px;align-items:start;margin-top:8px;}
-      @media (max-width: 900px){.main-grid{grid-template-columns:1fr}}
+
       .aside{padding:16px}
       .aside h2{margin:0 0 8px;font-size:18px}
       .qr-wrap{display:flex;align-items:center;justify-content:center;padding:8px;border:1px dashed var(--border);border-radius:12px;background:#fff;margin:8px 0 12px}
       .qr{width:100%;max-width:140px;height:auto}
-      .btn-cta{display:inline-block;padding:10px 14px;border-radius:12px;font-weight:600;text-decoration:none;background:var(--brand);color:#fff;border:1px solid var(--brand)}
-      .btn-cta:hover{filter:brightness(.95)}
-      /* Make selected metric button use brand color */
-      .btn[aria-pressed="true"]{background:var(--brand);color:#fff;border-color:var(--brand)}
-    .hero-brand{display:flex;align-items:center;gap:12px}
-      .hero-logo{height:64px;width:auto;display:block}
-      .hero-title{margin:0;font-size:clamp(28px,5vw,48px);line-height:1.1;font-weight:800}
-      .hero-sub{margin:6px 0 0;font-size:clamp(16px,3vw,22px);font-weight:600;color:var(--text)}
-    .impact{margin-top:16px;padding:16px}
+      .small{font-size:11px}
+
+      /* IMPACT STATS */
+      .impact{margin-top:16px;padding:16px}
       .stats-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
       @media (max-width:1100px){.stats-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
       @media (max-width:700px){.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -57,6 +57,7 @@
       .stat-num{font-size:clamp(24px,4vw,40px);font-weight:800;line-height:1;margin-top:8px}
       .stat-label{margin-top:6px;font-size:12px;color:var(--muted)}
 
+      /* STORY A (leaders + blurb) */
       .story{margin-top:16px;padding:16px}
       .story-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:16px;align-items:center}
       @media (max-width:900px){.story-grid{grid-template-columns:1fr}}
@@ -65,19 +66,33 @@
       .story-body h3{margin:0 0 8px;font-size:18px}
       .story-body p{margin:0 0 10px;line-height:1.5}
       .story-body .btn-cta{margin-top:8px}
+
+      /* STORIES B/C (two more alternating rows) */
+      .stories { margin-top:16px; padding:16px; }
+      .story-row { 
+        display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);
+        gap:16px; align-items:center; margin-top:16px;
+      }
+      .story-row.reverse { grid-template-columns:minmax(0,1fr) minmax(0,1.2fr); }
+      .story-row .story-img {
+        width:100%; height:auto; display:block; border-radius:12px;
+        aspect-ratio: 4 / 3; object-fit: cover;
+      }
+      .story-copy h3 { margin:0 0 8px; font-size:18px; }
+      .story-copy p { margin:0 0 10px; line-height:1.5; }
+      @media (max-width:900px){
+        .story-row, .story-row.reverse { grid-template-columns:1fr; }
+      }
     </style>
 
-    <!-- React + ReactDOM + Babel (no build step) -->
+    <!-- React + ReactDOM + Babel -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-      <!-- Favicon: using existing PNG logo for now -->
-    <link rel="icon" type="image/png" href="/yl-logo.png">
   </head>
   <body>
     <div class="wrap">
-      
-
+      <!-- HERO -->
       <section class="hero">
         <div class="hero-brand">
           <img src="yl-logo.png" class="hero-logo" alt="Young Life logo" />
@@ -88,54 +103,39 @@
 
       <div id="error" class="errbox"></div>
 
+      <!-- MAIN: chart + donate sidebar -->
       <div class="main-grid">
         <div id="root"></div>
         <aside class="aside card">
           <div class="aside-inner">
             <h2>Support GMV Young Life</h2>
-            <p class="muted">Your gift fuels leaders, clubs, and camps across the Great Miami Valley.</p>
+            <p class="muted">Your gift fuels leaders, clubs, and camps across Butler County.</p>
             <div class="qr-wrap">
-              <!-- Replace qr.png with your real QR image -->
               <img src="qr.png" alt="Donate QR code" class="qr" />
             </div>
-            <!-- Replace the href with your giving page URL -->
             <a id="donate-link" class="btn-cta" href="https://giving.younglife.org/legacyleaders" target="_blank" rel="noopener">Give Online</a>
             <p class="muted small">Scan the code or tap the button.</p>
           </div>
         </aside>
       </div>
 
+      <!-- IMPACT STATS -->
       <section class="impact card" aria-labelledby="impact-heading">
         <h3 id="impact-heading" class="muted" style="margin:0 0 8px;">Impact at a Glance</h3>
         <div class="stats-grid">
-          <div class="stat">
-            <div class="stat-num">15</div>
-            <div class="stat-label">Ministries</div>
-          </div>
-          <div class="stat">
-            <div class="stat-num">86</div>
-            <div class="stat-label">Volunteer Leaders</div>
-          </div>
-          <div class="stat">
-            <div class="stat-num">691</div>
-            <div class="stat-label">Kids went to Fall Weekend</div>
-          </div>
-          <div class="stat">
-            <div class="stat-num">563</div>
-            <div class="stat-label">Kids went to Summer Camp</div>
-          </div>
-          <div class="stat">
-            <div class="stat-num">30%</div>
-            <div class="stat-label">More campers this year</div>
-          </div>
+          <div class="stat"><div class="stat-num">15</div><div class="stat-label">Ministries</div></div>
+          <div class="stat"><div class="stat-num">86</div><div class="stat-label">Volunteer Leaders</div></div>
+          <div class="stat"><div class="stat-num">691</div><div class="stat-label">Kids went to Fall Weekend</div></div>
+          <div class="stat"><div class="stat-num">563</div><div class="stat-label">Kids went to Summer Camp</div></div>
+          <div class="stat"><div class="stat-num">30%</div><div class="stat-label">More campers this year</div></div>
         </div>
       </section>
 
+      <!-- STORY A (leaders + CTA) -->
       <section class="story card" aria-labelledby="story-heading">
         <div class="story-grid">
           <figure style="margin:0">
-            <!-- Replace leaders.jpg with your real photo -->
-            <img src="leaders.jpg" alt="GMV Young Life leaders" class="story-img" />
+            <img src="leaders.jpg" alt="GMV Young Life leaders on the field" class="story-img" />
             <figcaption class="caption">GMV Young Life leaders • Fall Leader Retreat 2025</figcaption>
           </figure>
           <div class="story-body">
@@ -147,241 +147,107 @@
         </div>
       </section>
 
+      <!-- STORIES B/C (no extra CTAs) -->
+      <section class="stories card" aria-labelledby="stories-heading">
+        <h3 id="stories-heading" class="muted" style="margin:0 0 8px;">Stories</h3>
+
+        <!-- Story 2: WyldLife -->
+        <div class="story-row">
+          <figure style="margin:0">
+            <img src="wyldlife.jpg" alt="Middle school WyldLife club gathered in a living room" class="story-img" loading="lazy" />
+            <figcaption class="caption">Wild Wednesday - Fall 2025</figcaption>
+          </figure>
+          <div class="story-copy">
+            <h3>Wild Growth in WyldLife</h3>
+            <p>East WyldLife launched Wild Wednesdays for the first time in years with over 40 kids showing up for bible study to hear about Jesus in a language they can understand.</p>
+            <p>This is one of three current WyldLife clubs with the hopes of launching one or two more this year.</p>
+          </div>
+        </div>
+
+        <!-- Story 3: Dean -->
+        <div class="story-row reverse">
+          <div class="story-copy">
+            <h3>Kids Meeting Jesus</h3>
+            <p>Dean was a freshman at Talawanda when he met Chris Light. After Fall Weekend, Dean was interested in Jesus, but didn't feel like he could commit.</p>
+            <p>He came to camp, prayed to accept Jesus, and this fall got baptized. Dean is stepping into the full life Jesus promised.</p>
+          </div>
+          <figure style="margin:0">
+            <img src="dean.jpg" alt="Student smiling in the back of a Jeep after club" class="story-img" loading="lazy" />
+            <figcaption class="caption">Life to the Full</figcaption>
+          </figure>
+        </div>
+      </section>
+
       <footer id="foot" class="muted"></footer>
     </div>
 
+    <!-- CHART APP (unchanged) -->
     <script type="text/babel" data-presets="env,react">
-      // Animation timings (ms)
-      const RISE_MS = 4800;
-      const PAUSE_BEFORE_REORDER_MS = 1500;
-      const REORDER_MS = 1500;
-
-      // Show any runtime errors in-page (hidden unless there is an error)
-      (function attachErrorBox(){
-        const box = document.getElementById('error');
-        function show(msg){ box.style.display='block'; box.textContent='Error: ' + msg; }
-        window.addEventListener('error', e => show(e.message));
-        window.addEventListener('unhandledrejection', e => show(e.reason && e.reason.message ? e.reason.message : String(e.reason)));
-      })();
-
+      const RISE_MS = 4800, PAUSE_BEFORE_REORDER_MS = 1500, REORDER_MS = 1500;
+      (function(){const b=document.getElementById('error');function s(m){b.style.display='block';b.textContent='Error: '+m;}
+        window.addEventListener('error',e=>s(e.message));window.addEventListener('unhandledrejection',e=>s(e.reason&&e.reason.message?e.reason.message:String(e.reason)));})();
       const { useEffect, useMemo, useRef, useState } = React;
 
-      // Only the two metrics you want, with whole-number formatting
       const METRICS = [
         { key: "totalGifts", label: "Total Gifts", fmt: v => "$" + Math.round(Number(v)).toLocaleString() },
         { key: "percentGivers", label: "% of Givers", fmt: v => Math.round(Number(v)) + "%" },
       ];
-
-      const COLORS = ["#f97316","#38bdf8","#34d399","#a78bfa","#fde047","#60a5fa","#22d3ee",
-                      "#f59e0b","#84cc16","#14b8a6","#ec4899","#6366f1","#eab308","#10b981","#3b82f6"];
-
-      // Keep colors fixed per year
+      const COLORS = ["#f97316","#38bdf8","#34d399","#a78bfa","#fde047","#60a5fa","#22d3ee","#f59e0b","#84cc16","#14b8a6","#ec4899","#6366f1","#eab308","#10b981","#3b82f6"];
       const BASE_YEAR = 1999;
-      const colorForYear = (y) => {
-        const len = COLORS.length;
-        const idx = ((y - BASE_YEAR) % len + len) % len; // safe modulo
-        return COLORS[idx];
-      };
-
-      // Y-axis ticks helper
-      function niceTicks(max, count = 5) {
-        if (max <= 0 || !isFinite(max)) return [0, 1];
-        const rough = max / count;
-        const pow10 = Math.pow(10, Math.floor(Math.log10(rough)));
-        let nice = pow10;
-        if (rough / pow10 >= 5) nice = 5 * pow10;
-        else if (rough / pow10 >= 2) nice = 2 * pow10;
-        const top = Math.ceil(max / nice) * nice;
-        const out = [];
-        for (let v = 0; v <= top + 1e-9; v += nice) out.push(v);
-        return out;
-      }
-
+      const colorForYear = y => COLORS[(((y-BASE_YEAR)%COLORS.length)+COLORS.length)%COLORS.length];
+      function niceTicks(max,count=5){ if(max<=0||!isFinite(max))return[0,1]; const rough=max/count; const pow10=Math.pow(10,Math.floor(Math.log10(rough))); let nice=pow10;
+        if(rough/pow10>=5) nice=5*pow10; else if(rough/pow10>=2) nice=2*pow10; const top=Math.ceil(max/nice)*nice; const out=[]; for(let v=0; v<=top+1e-9; v+=nice) out.push(v); return out; }
       const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
 
       function App(){
         const [metric, setMetric] = useState("totalGifts");
-        const [rows, setRows] = useState([]);
-        const [loading, setLoading] = useState(true);
-        const [error, setError] = useState(null);
-        const [lastUpdated, setLastUpdated] = useState(null);
+        const [rows, setRows] = useState([]); const [loading, setLoading] = useState(true);
+        const [error, setError] = useState(null); const [lastUpdated, setLastUpdated] = useState(null);
+        const [animated, setAnimated] = useState([]); const [sorted, setSorted] = useState(false); const [reordering, setReordering] = useState(false);
 
-        // animation
-        const [animated, setAnimated] = useState([]); // [{year, value}]
-        const [sorted, setSorted] = useState(false);
-        const [reordering, setReordering] = useState(false);
+        const holderRef = useRef(null); const [width, setWidth] = useState(980);
+        useEffect(()=>{const set=()=>setWidth(holderRef.current?holderRef.current.clientWidth:980); set(); window.addEventListener('resize',set); return ()=>window.removeEventListener('resize',set);},[]);
 
-        // responsive width
-        const holderRef = useRef(null);
-        const [width, setWidth] = useState(980);
-        useEffect(() => {
-          const set = () => setWidth(holderRef.current ? holderRef.current.clientWidth : 980);
-          set();
-          window.addEventListener('resize', set);
-          return () => window.removeEventListener('resize', set);
-        }, []);
+        useEffect(()=>{(async()=>{try{setLoading(true);setError(null);
+          const r=await fetch("/.netlify/functions/leaderboard",{cache:"no-store"}); const json=await r.json();
+          if(!r.ok) throw new Error(json?.error||"Failed to load"); const arr=Array.isArray(json.rows)?json.rows:[]; setRows(arr); setLastUpdated(new Date());
+          document.getElementById('foot').textContent=""; }catch(e){ setError(String(e.message||e)); }finally{ setLoading(false); }})();},[]);
+        useEffect(()=>{ if(lastUpdated){ document.getElementById('foot').textContent=`Last updated: ${lastUpdated.toLocaleTimeString()}`;} },[lastUpdated]);
 
-        // fetch once
-        useEffect(() => {
-          (async () => {
-            try {
-              setLoading(true); setError(null);
-              const r = await fetch("/.netlify/functions/leaderboard", { cache: "no-store" });
-              const json = await r.json();
-              if(!r.ok) throw new Error(json?.error || "Failed to load");
-              const arr = Array.isArray(json.rows) ? json.rows : [];
-              setRows(arr);
-              setLastUpdated(new Date());
-              const foot = document.getElementById('foot');
-              foot.textContent = lastUpdated ? "" : "";
-            } catch(e) {
-              setError(String(e.message || e));
-            } finally {
-              setLoading(false);
-            }
-          })();
-        }, []);
+        const targets = useMemo(()=>rows.map(r=>({year:r.year,value:Number(r[metric])||0})),[rows,metric]);
+        const yMax = useMemo(()=>{ const max=targets.reduce((m,d)=>Math.max(m,d.value||0),0); return metric==="totalGifts"?Math.max(1000,Math.ceil(max/1000)*1000):100; },[targets,metric]);
+        const ticks = useMemo(()=> metric==="totalGifts"?niceTicks(yMax,5):[0,20,40,60,80,100],[yMax,metric]);
+        const fmtTick = v => (metric==="totalGifts"?"$"+Math.round(Number(v)).toLocaleString():Math.round(Number(v))+"%");
+        const metricObj = METRICS.find(m=>m.key===metric);
 
-        // update footer once we know lastUpdated
-        useEffect(() => {
-          const foot = document.getElementById('foot');
-          if (lastUpdated) foot.textContent = `Last updated: ${lastUpdated.toLocaleTimeString()}`;
-        }, [lastUpdated]);
-
-        // targets for current metric
-        const targets = useMemo(
-          () => rows.map(r => ({ year: r.year, value: Number(r[metric]) || 0 })),
-          [rows, metric]
-        );
-
-        // y max & ticks
-        const yMax = useMemo(() => {
-          const max = targets.reduce((m, d) => Math.max(m, d.value || 0), 0);
-          if (metric === "totalGifts") {
-            const step = 1000;
-            return Math.max(step, Math.ceil(max/step)*step);
-          }
-          return 100;
-        }, [targets, metric]);
-
-        const ticks = useMemo(
-          () => (metric === "totalGifts" ? niceTicks(yMax, 5) : [0,20,40,60,80,100]),
-          [yMax, metric]
-        );
-
-        const fmtTick = v => (metric === "totalGifts"
-          ? "$" + Math.round(Number(v)).toLocaleString()
-          : Math.round(Number(v)) + "%");
-
-        const metricObj = METRICS.find(m => m.key === metric);
-
-        // rise animation + then reorder (FLIP)
-        const rafRef = useRef(null);
-        const FLIP_prevX = useRef(new Map());
-        const barRefs = useRef(new Map());
-
-        function playRise() {
-          if (rafRef.current) cancelAnimationFrame(rafRef.current);
-          setSorted(false);
-          setReordering(false);
-          setAnimated(targets.map(t => ({ year: t.year, value: 0 })));
-
-          const start = performance.now();
-          const duration = RISE_MS;
-
-          function step(now) {
-            const t = Math.min(1, (now - start) / duration);
-            const eased = easeOutCubic(t);
-            const next = targets.map(tgt => ({ year: tgt.year, value: tgt.value * eased }));
-            setAnimated(next);
-            if (t < 1) {
-              rafRef.current = requestAnimationFrame(step);
-            } else {
-              setTimeout(() => startReorder(), PAUSE_BEFORE_REORDER_MS);
-            }
-          }
-          rafRef.current = requestAnimationFrame(step);
+        const rafRef=useRef(null), FLIP_prevX=useRef(new Map()), barRefs=useRef(new Map());
+        function playRise(){ if(rafRef.current) cancelAnimationFrame(rafRef.current); setSorted(false); setReordering(false); setAnimated(targets.map(t=>({year:t.year,value:0})));
+          const start=performance.now(); function step(now){const t=Math.min(1,(now-start)/RISE_MS); const eased=easeOutCubic(t);
+            setAnimated(targets.map(tgt=>({year:tgt.year,value:tgt.value*eased})));
+            if(t<1){ rafRef.current=requestAnimationFrame(step);} else { setTimeout(()=>startReorder(),PAUSE_BEFORE_REORDER_MS);} } rafRef.current=requestAnimationFrame(step);
         }
+        useEffect(()=>{ if(rows.length) playRise(); },[metric,rows.length]);
 
-        useEffect(() => {
-          if (rows.length) playRise();
-        }, [metric, rows.length]);
+        const disp = useMemo(()=>{ const aMap=new Map(animated.map(a=>[a.year,a.value])); const base=rows.map(r=>({...r,value:aMap.get(r.year)||0}));
+          return (sorted?[...base].sort((x,y)=>y.value-x.value):[...base].sort((x,y)=>x.year-y.year)); },[rows,animated,sorted]);
 
-        // animated display values
-        const disp = useMemo(() => {
-          const aMap = new Map(animated.map(a => [a.year, a.value]));
-          const base = rows.map(r => ({
-            ...r,
-            value: aMap.get(r.year) || 0
-          }));
-          if (sorted) return [...base].sort((x,y) => y.value - x.value);
-          return [...base].sort((x,y) => x.year - y.year);
-        }, [rows, animated, sorted]);
+        const H=420, M={top:20,right:20,bottom:70,left:70}; const innerW=Math.max(320,width)-M.left-M.right; const innerH=H-M.top-M.bottom;
+        const n=disp.length||1; const band=innerW/n; const barPad=Math.min(12,band*0.2); const barW=Math.max(2,band-barPad);
+        const xPos=i=>M.left+i*band+(band-barW)/2; const yPos=v=>{const maxV=metric==="totalGifts"?yMax:100; const t=Math.min(1,Math.max(0,(v||0)/(maxV||1))); return M.top+(1-t)*innerH; };
 
-        // layout
-        const H = 420;
-        const M = { top: 20, right: 20, bottom: 70, left: 70 };
-        const innerW = Math.max(320, width) - M.left - M.right;
-        const innerH = H - M.top - M.bottom;
-        const n = disp.length || 1;
-        const band = innerW / n;
-        const barPad = Math.min(12, band * 0.2);
-        const barW = Math.max(2, band - barPad);
-        const xPos = (i) => M.left + i * band + (band - barW) / 2;
-        const yPos = (v) => {
-          const maxV = (metric === "totalGifts") ? yMax : 100;
-          const t = Math.min(1, Math.max(0, (v || 0) / (maxV || 1)));
-          return M.top + (1 - t) * innerH;
-        };
-
-        // FLIP capture → sort → animate
-        function startReorder() {
-          const prev = new Map();
-          disp.forEach((d, i) => prev.set(d.year, xPos(i) + barW/2));
-          FLIP_prevX.current = prev;
-
-          setSorted(true);
-          setReordering(true);
-        }
-
-        useEffect(() => {
-          if (!reordering) return;
-          requestAnimationFrame(() => {
-            // jump to old x
-            disp.forEach((d, i) => {
-              const node = barRefs.current.get(d.year);
-              if (!node) return;
-              const prevX = FLIP_prevX.current.get(d.year) || 0;
-              const newX = xPos(i) + barW/2;
-              const delta = prevX - newX;
-
-              node.style.transition = "none";
-              node.style.transform = `translate(${delta}px, 0px)`;
-            });
-
-            // force reflow
-            void document.body.offsetHeight;
-
-            // animate to new x
-            disp.forEach((d) => {
-              const node = barRefs.current.get(d.year);
-              if (!node) return;
-              node.style.transition = `transform ${REORDER_MS}ms cubic-bezier(0.22,1,0.36,1)`;
-              node.style.transform = "translate(0px, 0px)";
-            });
-
-            setTimeout(() => setReordering(false), REORDER_MS + 100);
-          });
-        }, [reordering, width]);
+        function startReorder(){ const prev=new Map(); disp.forEach((d,i)=>prev.set(d.year,xPos(i)+barW/2)); FLIP_prevX.current=prev; setSorted(true); setReordering(true); }
+        useEffect(()=>{ if(!reordering) return; requestAnimationFrame(()=>{ disp.forEach((d,i)=>{const node=barRefs.current.get(d.year); if(!node) return;
+              const prevX=FLIP_prevX.current.get(d.year)||0; const newX=xPos(i)+barW/2; const delta=prevX-newX; node.style.transition="none"; node.style.transform=`translate(${delta}px,0px)`; });
+            void document.body.offsetHeight; disp.forEach(d=>{const node=barRefs.current.get(d.year); if(!node) return;
+              node.style.transition=`transform ${REORDER_MS}ms cubic-bezier(0.22,1,0.36,1)`; node.style.transform="translate(0px,0px)"; });
+            setTimeout(()=>setReordering(false),REORDER_MS+100); }); },[reordering,width]);
 
         return (
           <div>
             <header className="card" style={{padding:"16px"}}>
               <div className="row" role="group" aria-label="Choose metric">
                 {METRICS.map(m => (
-                  <button key={m.key} className="btn"
-                          aria-pressed={metric===m.key}
-                          onClick={()=>setMetric(m.key)}>{m.label}</button>
+                  <button key={m.key} className="btn" aria-pressed={metric===m.key} onClick={()=>setMetric(m.key)}>{m.label}</button>
                 ))}
               </div>
             </header>
@@ -389,53 +255,23 @@
             <section className="card chart">
               <div ref={holderRef} className="svg-wrap">
                 <svg viewBox={`0 0 ${Math.max(320,width)} ${H}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Leaderboard bar chart">
-                  {/* Y grid + ticks */}
-                  {ticks.map((t, i) => {
-                    const y = yPos(t);
-                    return (
-                      <g key={`tick-${i}`}>
-                        <line x1={M.left} y1={y} x2={Math.max(320,width) - M.right} y2={y} stroke="#eee" />
-                        <text x={M.left - 10} y={y + 4} textAnchor="end" fontSize="12" fill="#111">
-                          {fmtTick(t)}
-                        </text>
-                      </g>
-                    );
-                  })}
-                  {/* X axis baseline */}
-                  <line x1={M.left} y1={H - M.bottom} x2={Math.max(320,width) - M.right} y2={H - M.bottom} stroke="#ddd" />
-
-                  {/* Bars + labels (color fixed per year) */}
-                  {disp.map((d, i) => {
-                    const x = xPos(i);
-                    const y = yPos(d.value);
-                    const h = (H - M.bottom) - y;
-                    const color = colorForYear(d.year);
-                    const cx = x + barW/2;
-
-                    return (
-                      <g key={d.year} className="bar" ref={el => { if (el) barRefs.current.set(d.year, el); }}>
-                        <rect x={x} y={y} width={barW} height={Math.max(0, h)} fill={color} rx="8" ry="8">
-                          <title>{`Class of ${d.year}\n${metricObj.label}: ${metricObj.fmt(d.value)}`}</title>
-                        </rect>
-                        <text x={cx} y={y - 6} textAnchor="middle" fontSize="11" fill="#111">
-                          {metricObj.fmt(d.value)}
-                        </text>
-                        <text x={cx} y={H - M.bottom + 14} fontSize="10" fill="#111"
-                              textAnchor="end" transform={`rotate(-45 ${cx} ${H - M.bottom + 14})`}>
-                          {d.year}
-                        </text>
-                      </g>
-                    );
-                  })}
+                  {ticks.map((t,i)=>{const y=yPos(t);return(<g key={`tick-${i}`}><line x1={M.left} y1={y} x2={Math.max(320,width)-M.right} y2={y} stroke="#eee"/><text x={M.left-10} y={y+4} textAnchor="end" fontSize="12" fill="#111">{fmtTick(t)}</text></g>)})}
+                  <line x1={M.left} y1={H-M.bottom} x2={Math.max(320,width)-M.right} y2={H-M.bottom} stroke="#ddd" />
+                  {disp.map((d,i)=>{const x=xPos(i), y=yPos(d.value), h=(H-M.bottom)-y, color=colorForYear(d.year), cx=x+barW/2;
+                    return(<g key={d.year} className="bar" ref={el=>{if(el) barRefs.current.set(d.year,el);}}>
+                      <rect x={x} y={y} width={barW} height={Math.max(0,h)} fill={color} rx="8" ry="8">
+                        <title>{`Class of ${d.year}\n${metricObj.label}: ${metricObj.fmt(d.value)}`}</title>
+                      </rect>
+                      <text x={cx} y={y-6} textAnchor="middle" fontSize="11" fill="#111">{metricObj.fmt(d.value)}</text>
+                      <text x={cx} y={H-M.bottom+14} fontSize="10" fill="#111" textAnchor="end" transform={`rotate(-45 ${cx} ${H-M.bottom+14})`}>{d.year}</text>
+                    </g>)})}
                 </svg>
               </div>
             </section>
           </div>
         );
       }
-
-      const root = ReactDOM.createRoot(document.getElementById("root"));
-      root.render(<App />);
+      ReactDOM.createRoot(document.getElementById("root")).render(<App />);
     </script>
   </body>
 </html>
